@@ -1,0 +1,14 @@
+[workspace]
+members = ["app", "ssd1306"]
+resolver = "3"
+
+
+[workspace.dependencies]
+panic-halt = "1.0.0"
+stm32f1xx-hal = { version = "0.11.0", features = ["stm32f103", "medium"] }
+
+[profile.release]
+codegen-units = 2
+debug = false
+lto = false
+panic = "abort"

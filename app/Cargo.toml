@@ -1,0 +1,11 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+panic-halt.workspace = true
+stm32f1xx-hal.workspace = true
+cortex-m = "0.7.7"
+cortex-m-rt = "0.7.5"
+ssd1306 ={version = "0.1.0", path = "../ssd1306"}
