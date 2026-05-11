@@ -4,7 +4,7 @@ use cortex_m_rt::entry;
 use panic_halt as _;
 use stm32f1xx_hal::{self as hal, i2c::I2c, prelude::*, rcc};
 const OLED_ADDR: u8 = 0x3C;
-use ssd1306::SSD1306;
+use ssd1306::{ SSD1306_V2};
 #[entry]
 fn main() -> ! {
     let cp = cortex_m::Peripherals::take().unwrap();
@@ -29,14 +29,15 @@ fn main() -> ! {
         &mut rcc,
     );
     let mut vram = [0u8; 8 * 129];
-    let mut lcd = SSD1306::new(iic, OLED_ADDR, 64, 128, Some(&mut vram[..]));
+    // let mut lcd = SSD1306::new(iic, OLED_ADDR, 64, 128, Some(&mut vram[..]));
+    let mut lcd=SSD1306_V2::new(iic, OLED_ADDR, 64, 128, &mut vram);
     let mut x: i16 = 5;
     let mut step: i16 = 2;
     lcd.init();
     loop {
         lcd.new_frame();
         for y in 10..=60 {
-            lcd.draw_point(x, y);
+            lcd.draw_pixel(x, y);
         }
         if x < 0 {
             step = 2;

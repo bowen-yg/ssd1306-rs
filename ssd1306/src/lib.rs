@@ -19,12 +19,12 @@ pub struct SSD1306<'a, I2C> {
     vram: Option<&'a mut [u8]>,
 }
 
-pub struct SSD1306_V2<'a,I2C>{
-    i2c:I2C,
-    addr:u8,
-    row:u16,
-    col:u16,
-    vram: Vram<'a>
+pub struct SSD1306_V2<'a, I2C> {
+    i2c: I2C,
+    addr: u8,
+    row: u16,
+    pub col: u16,
+    vram: Vram<'a>,
 }
 
 impl<'a, I2C> SSD1306<'a, I2C>
@@ -98,7 +98,7 @@ impl<'a> IndexMut<(usize, usize)> for Vram<'a> {
     }
 }
 
-impl<'a, I2C: HalI2c> SSD1306_V2<'a,I2C> {
+impl<'a, I2C: HalI2c> SSD1306_V2<'a, I2C> {
     #[inline(always)]
     fn send(&mut self, data: &[u8]) -> Result<(), I2C::Error> {
         self.i2c.write(self.addr, data)
@@ -108,19 +108,39 @@ impl<'a, I2C: HalI2c> SSD1306_V2<'a,I2C> {
         let buf: [u8; 2] = [0, cmd];
         self.send(&buf);
     }
-    pub fn new(i2c:I2C, addr:u8, row:u16, col:u16, vram:&'a mut [u8])->Self{
-        Self{i2c, addr, row, col, vram:Vram{ram: vram, col: col+1} }
+    pub fn new(i2c: I2C, addr: u8, row: u16, col: u16, vram: &'a mut [u8]) -> Self {
+        Self {
+            i2c,
+            addr,
+            row,
+            col,
+            vram: Vram {
+                ram: vram,
+                col: col + 1,
+            },
+        }
     }
-    pub fn init(&mut self){
-        for i in 0..(self.row/OLED_PAGE as u16)as usize {
-            self.vram[(i,0)]=0x40;
+    pub fn init(&mut self) {
+        for i in 0..(self.row / OLED_PAGE as u16) as usize {
+            self.vram[(i, 0)] = 0x40;
         }
         let buf: [u8; _] = [
             0xAE, 0x20, 0x02, 0xB0, 0xC8, 0x00, 0x10, 0x40, 0x81, 0xDF, 0xA1, 0xA6, 0xA8, 0x3F,
-            0xA4, 0xD3, 0x00, 0xD5, 0xF0, 0xD9, 0x22, 0xDA, 0x12, 0xDB, 0x20, 0x8D, 0x14, 0xAF
+            0xA4, 0xD3, 0x00, 0xD5, 0xF0, 0xD9, 0x22, 0xDA, 0x12, 0xDB, 0x20, 0x8D, 0x14, 0xAF,
         ];
         for cmd in buf {
             self.send_cmd(cmd);
         }
+    }
+    pub fn draw_pixel(&mut self, x: i16, y: i16) {
+        if x < 0 || x > self.col as i16 - 1 {
+            return;
+        }
+        if y < 0 || y > self.row as i16 - 1 {
+            return;
+        }
+        let page = (y / OLED_PAGE as i16) as usize;
+        let bit = (y % 8) as u8;
+        self.vram[(page, x as usize + 1)] |= 1u8 << bit;
     }
 }
